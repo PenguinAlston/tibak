@@ -1,0 +1,61 @@
+# 基础设施 Docker Compose 配置
+# 仅包含数据库和中间件，用于本地开发环境
+# 前后端手动运行
+
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: qwen-chat-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: qwen_chat
+      MYSQL_USER: ${MYSQL_USER:-qwen}
+      MYSQL_PASSWORD: ${MYSQL_USER_PASSWORD:-qwen123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - qwen-chat-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: qwen-chat-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: qwen_chat
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - qwen-chat-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: qwen-chat-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - qwen-chat-network
+
+networks:
+  qwen-chat-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  mongodb_data:
+  redis_data:

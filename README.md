@@ -28,16 +28,48 @@
 ### 环境要求
 - JDK 17+
 - Node.js 18+
-- MySQL 8.0+
-- MongoDB 7+
-- Redis 7+
+- Docker & Docker Compose
 
-### 方式一：Docker Compose (推荐)
+### 方式一：仅启动基础设施（推荐用于开发）
+
+此方式只启动 MySQL、MongoDB 和 Redis，前后端手动运行以便于开发调试。
 
 ```bash
 # 1. 复制环境变量文件
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+cp .env.example .env
+
+# 2. 修改 .env 文件，设置 DASHSCOPE_API_KEY
+
+# 3. 启动基础设施（MySQL + MongoDB + Redis）
+# Windows
+docker-compose -f docker-compose.infra.yml up -d
+# 或使用快捷脚本
+start-infra.bat
+
+# Linux/Mac
+./start-infra.sh
+
+# 4. 启动后端
+cd backend
+cp .env.example .env
+# 编辑 .env 配置 API Key 和数据库密码
+mvn clean install
+cd qwen-chat-service
+mvn spring-boot:run
+
+# 5. 启动前端（新终端）
+cd frontend
+npm install
+npm run dev
+
+# 6. 访问 http://localhost:3000
+```
+
+### 方式二：完整 Docker 部署（生产环境）
+
+```bash
+# 1. 复制环境变量文件
+cp .env.example .env
 
 # 2. 修改 .env 文件中的配置，特别是 DASHSCOPE_API_KEY
 
@@ -47,7 +79,9 @@ docker-compose up -d
 # 4. 访问 http://localhost
 ```
 
-### 方式二：本地开发
+### 方式三：完全本地开发（无 Docker）
+
+需要手动安装 MySQL 8.0+、MongoDB 7+、Redis 7+
 
 #### 后端启动
 
@@ -97,7 +131,11 @@ npm run dev
 │   │   ├── views/           # 页面
 │   │   └── types/           # TypeScript 类型
 │   └── package.json
-├── docker-compose.yml
+├── docker-compose.yml           # 完整部署配置
+├── docker-compose.infra.yml     # 仅基础设施配置
+├── docker-compose.mysql.yml     # 仅 MySQL 配置
+├── start-infra.sh               # Linux/Mac 启动脚本
+├── start-infra.bat              # Windows 启动脚本
 └── README.md
 ```
 
