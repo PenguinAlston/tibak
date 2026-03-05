@@ -11,14 +11,22 @@ spring:
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  # MongoDB 配置（可选，不使用可注释）
   data:
     mongodb:
-      uri: mongodb://localhost:27017/qwen_chat
+      uri: ${MONGODB_URI:mongodb://localhost:27017/qwen_chat}
 
+  # Redis 配置（可选）
   redis:
-    host: localhost
-    port: 6379
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
+
+# 条件化配置
+qwen:
+  chat:
+    # 是否使用 MongoDB 存储聊天记录（false 则使用 MySQL）
+    use-mongodb: ${USE_MONGODB:false}
 
 ai:
   dashscope:

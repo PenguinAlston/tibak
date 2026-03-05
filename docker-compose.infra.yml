@@ -27,35 +27,9 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB
-  mongodb:
-    image: mongo:7
-    container_name: qwen-chat-mongodb
-    environment:
-      MONGO_INITDB_DATABASE: qwen_chat
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - qwen-chat-network
-
-  # Redis
-  redis:
-    image: redis:7-alpine
-    container_name: qwen-chat-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - qwen-chat-network
-
 networks:
   qwen-chat-network:
     driver: bridge
 
 volumes:
   mysql_data:
-  mongodb_data:
-  redis_data:
