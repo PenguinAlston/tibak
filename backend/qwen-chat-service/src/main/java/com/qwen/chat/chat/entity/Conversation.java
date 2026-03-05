@@ -25,11 +25,18 @@ public class Conversation {
     @Field("user_id")
     private String userId;
 
+    @Field("username")
+    private String username;
+
     @Field("title")
     private String title;
 
     @Field("model")
     private String model;
+
+    @Field("is_public")
+    @Builder.Default
+    private Boolean isPublic = false;
 
     @Field("created_at")
     private LocalDateTime createdAt;

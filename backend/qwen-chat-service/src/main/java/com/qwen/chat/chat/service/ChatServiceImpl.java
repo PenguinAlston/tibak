@@ -147,4 +147,25 @@ public class ChatServiceImpl implements ChatService {
         // MongoDB 会自动处理
         return message;
     }
+
+    @Override
+    public String getOrCreateConversationId(String userId, String conversationId, String userMessage) {
+        try {
+            // 如果提供了 conversationId，检查是否存在
+            if (conversationId != null && !conversationId.isEmpty()) {
+                Conversation conversation = getConversation(userId, conversationId);
+                return conversation.getId();
+            }
+        } catch (Exception e) {
+            log.warn("Conversation not found, creating new one");
+        }
+
+        // 创建新对话，使用用户消息的前 30 个字符作为标题
+        String title = userMessage != null && userMessage.length() > 30
+            ? userMessage.substring(0, 30) + "..."
+            : (userMessage != null ? userMessage : "新对话");
+
+        Conversation conversation = createConversation(userId, title);
+        return conversation.getId();
+    }
 }

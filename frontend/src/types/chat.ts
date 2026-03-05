@@ -22,8 +22,10 @@ export interface ChatResponse {
 export interface Conversation {
   id: string
   user_id: string
+  username?: string
   title: string
   model: string
+  is_public?: boolean
   created_at: string
   updated_at: string
   messages: Message[]

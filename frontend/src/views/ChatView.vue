@@ -19,9 +19,17 @@
           :key="conv.id"
           :class="['conversation-item', { active: conv.id === chatStore.currentConversationId }]"
           @click="selectConversation(conv.id)"
+          @dblclick="startRename(conv)"
+          title="双击重命名"
         >
-          <span class="conversation-title">{{ conv.title }}</span>
+          <div class="conversation-content">
+            <span class="conversation-title">{{ conv.title }}</span>
+            <span class="conversation-date">{{ formatDate(conv.updated_at) }}</span>
+          </div>
           <button class="delete-btn" @click.stop="deleteConversation(conv.id)">×</button>
+        </div>
+        <div v-if="chatStore.conversations.length === 0" class="empty-history">
+          <span>暂无历史记录</span>
         </div>
       </div>
 
@@ -46,6 +54,19 @@
         </el-button>
       </div>
     </el-dialog>
+
+    <!-- 重命名对话框 -->
+    <el-dialog v-model="showRenameDialog" title="重命名对话" width="400px">
+      <el-input
+        v-model="renameTitle"
+        placeholder="请输入对话标题"
+        @keyup.enter="confirmRename"
+      />
+      <template #footer>
+        <el-button @click="showRenameDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmRename">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -62,6 +83,9 @@ const chatStore = useChatStore()
 
 const sidebarCollapsed = ref(false)
 const showSettings = ref(false)
+const showRenameDialog = ref(false)
+const renameTitle = ref('')
+const renamingConversationId = ref<string | null>(null)
 
 const createNewConversation = async () => {
   await chatStore.createConversation('新对话')
@@ -77,9 +101,40 @@ const deleteConversation = async (id: string) => {
   }
 }
 
+const startRename = (conv: any) => {
+  renamingConversationId.value = conv.id
+  renameTitle.value = conv.title
+  showRenameDialog.value = true
+}
+
+const confirmRename = async () => {
+  if (renamingConversationId.value && renameTitle.value.trim()) {
+    await chatStore.renameConversation(renamingConversationId.value, renameTitle.value.trim())
+    showRenameDialog.value = false
+    renamingConversationId.value = null
+  }
+}
+
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
+}
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+
+  if (days === 0) {
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  } else if (days === 1) {
+    return '昨天'
+  } else if (days < 7) {
+    return `${days}天前`
+  } else {
+    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+  }
 }
 
 onMounted(() => {
@@ -149,6 +204,13 @@ onMounted(() => {
   padding: 8px;
 }
 
+.empty-history {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 14px;
+}
+
 .conversation-item {
   display: flex;
   align-items: center;
@@ -168,12 +230,24 @@ onMounted(() => {
   background: #e0e0ff;
 }
 
-.conversation-title {
+.conversation-content {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.conversation-title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
+}
+
+.conversation-date {
+  font-size: 11px;
+  color: #999;
 }
 
 .delete-btn {
@@ -184,6 +258,7 @@ onMounted(() => {
   cursor: pointer;
   font-size: 16px;
   color: #999;
+  flex-shrink: 0;
 }
 
 .conversation-item:hover .delete-btn {

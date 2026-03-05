@@ -42,14 +42,28 @@ export const useChatStore = defineStore('chat', () => {
     }
     messages.value.push(assistantMessage)
 
+    let newConversationId: string | undefined
+
     try {
-      for await (const chunk of chatApi.streamChat({
+      for await (const result of chatApi.streamChat({
         user_message: content,
         conversation_id: currentConversationId.value || undefined,
       })) {
-        assistantMessage.content += chunk
-        // 触发重新渲染
-        messages.value = [...messages.value]
+        if (result.conversationId) {
+          // 保存返回的 conversationId
+          newConversationId = result.conversationId
+        } else if (result.content) {
+          assistantMessage.content += result.content
+          // 触发重新渲染
+          messages.value = [...messages.value]
+        }
+      }
+
+      // 如果是新对话，更新 currentConversationId
+      if (newConversationId && !currentConversationId.value) {
+        currentConversationId.value = newConversationId
+        // 刷新对话列表
+        await loadConversations()
       }
 
       // 更新当前对话的消息列表
@@ -58,6 +72,7 @@ export const useChatStore = defineStore('chat', () => {
         if (conv) {
           conv.messages = conv.messages || []
           conv.messages.push(userMessage, assistantMessage)
+          conv.updated_at = new Date().toISOString()
         }
       }
     } catch (e) {

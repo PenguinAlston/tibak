@@ -23,11 +23,9 @@ public class Message {
     private String conversationId;
 
     @Field("role")
-    @JsonProperty("role")
     private String role; // USER or ASSISTANT
 
     @Field("content")
-    @JsonProperty("content")
     private String content;
 
     @Field("created_at")

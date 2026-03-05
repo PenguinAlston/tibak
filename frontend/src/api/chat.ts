@@ -2,9 +2,14 @@
 import request from './request'
 import type { ChatRequest, ChatResponse, Conversation } from '@/types/chat'
 
+export interface StreamChatResult {
+  content: string
+  conversationId?: string
+}
+
 export const chatApi = {
   // 流式聊天
-  async *streamChat(requestData: ChatRequest): AsyncGenerator<string> {
+  async *streamChat(requestData: ChatRequest): AsyncGenerator<StreamChatResult> {
     const token = localStorage.getItem('token')
     const response = await fetch('/api/chat/completions', {
       method: 'POST',
@@ -21,10 +26,17 @@ export const chatApi = {
 
     const reader = response.body?.getReader()
     const decoder = new TextDecoder()
+    let conversationId: string | undefined
 
     while (true) {
       const { done, value } = await reader!.read()
-      if (done) break
+      if (done) {
+        // 返回 conversationId
+        if (conversationId) {
+          yield { content: '', conversationId }
+        }
+        break
+      }
 
       const chunk = decoder.decode(value)
       const lines = chunk.split('\n')
@@ -32,11 +44,14 @@ export const chatApi = {
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6)
-          if (data !== '[DONE]' && data.trim()) {
+          if (data.trim()) {
             try {
               const parsed = JSON.parse(data)
-              if (parsed.content) {
-                yield parsed.content
+              if (parsed.content === '[DONE]') {
+                // 保存 conversationId 供最后返回
+                conversationId = parsed.conversation_id
+              } else if (parsed.content) {
+                yield { content: parsed.content, conversationId: undefined }
               }
             } catch (e) {
               // 忽略解析错误

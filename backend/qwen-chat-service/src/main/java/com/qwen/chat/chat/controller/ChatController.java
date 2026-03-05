@@ -29,8 +29,22 @@ public class ChatController {
             @Valid @RequestBody ChatRequest request,
             @AuthenticationPrincipal UserDetails user) {
 
+        // 获取或创建对话 ID
+        String conversationId = chatService.getOrCreateConversationId(
+            user.getUsername(),
+            request.getConversationId(),
+            request.getUserMessage()
+        );
+
+        // 更新请求中的 conversationId
+        request.setConversationId(conversationId);
+
         return chatService.streamChat(user.getUsername(), request)
-            .map(content -> new ChatResponse(content, request.getConversationId()))
+            .map(content -> new ChatResponse(content, null))
+            .concatWith(Flux.defer(() -> {
+                // 返回 conversation_id 给前端
+                return Flux.just(new ChatResponse("[DONE]", conversationId));
+            }))
             .onErrorResume(e -> {
                 return Flux.just(new ChatResponse("Error: " + e.getMessage(), null));
             });
