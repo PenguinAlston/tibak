@@ -6,14 +6,14 @@ spring:
     name: qwen-chat-auth
 
   datasource:
-    url: jdbc:mysql://localhost:3306/qwen_chat?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: ${MYSQL_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/qwen_chat
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
 
   redis:
-    host: localhost
-    port: 6379
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
 
   jpa:

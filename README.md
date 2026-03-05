@@ -10,7 +10,7 @@
 - Spring WebFlux (SSE 流式响应)
 - Spring Security + JWT
 - MyBatis-Plus
-- MySQL (主数据库 - 用户/对话/消息)
+- PostgreSQL (主数据库 - 用户/对话/消息)
 - MongoDB (可选，聊天记录存储)
 - Redis (可选，缓存)
 
@@ -32,7 +32,7 @@
 
 ### 方式一：仅启动基础设施（推荐用于开发）
 
-此方式只启动 MySQL，前后端手动运行以便于开发调试。
+此方式只启动 PostgreSQL，前后端手动运行以便于开发调试。
 
 ```bash
 # 1. 复制环境变量文件
@@ -40,7 +40,7 @@ cp .env.example .env
 
 # 2. 修改 .env 文件，设置 DASHSCOPE_API_KEY
 
-# 3. 启动基础设施（仅 MySQL）
+# 3. 启动基础设施（仅 PostgreSQL）
 # Windows
 docker-compose -f docker-compose.infra.yml up -d
 # 或使用快捷脚本
@@ -65,7 +65,7 @@ npm run dev
 # 6. 访问 http://localhost:3000
 ```
 
-**说明：** 默认配置仅使用 MySQL 存储所有数据（用户/对话/消息），无需 MongoDB 和 Redis。
+**说明：** 默认配置仅使用 PostgreSQL 存储所有数据（用户/对话/消息），无需 MongoDB 和 Redis。
 
 ### 方式二：完整 Docker 部署（生产环境）
 
@@ -83,7 +83,7 @@ docker-compose up -d
 
 ### 方式三：完全本地开发（无 Docker）
 
-需要手动安装 MySQL 8.0+
+需要手动安装 PostgreSQL 15+
 
 #### 后端启动
 
@@ -180,14 +180,14 @@ ai:
     api-key: your-api-key
     model: qwen-plus
 
-# 数据库配置
+# 数据库配置 (PostgreSQL)
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/qwen_chat
-    username: root
-    password: your-password
+    url: jdbc:postgresql://localhost:5432/qwen_chat
+    username: postgres
+    password: postgres
 
-# 可选：使用 MongoDB 存储聊天记录（默认使用 MySQL）
+# 可选：使用 MongoDB 存储聊天记录（默认使用 PostgreSQL）
 # qwen:
 #   chat:
 #     use-mongodb: true
@@ -202,8 +202,9 @@ VITE_API_BASE_URL=http://localhost:8080/api
 ### 环境变量 (.env)
 
 ```bash
-# MySQL 配置
-MYSQL_PASSWORD=root
+# PostgreSQL 配置
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 
 # Dashscope API Key
 DASHSCOPE_API_KEY=your-api-key-here

@@ -6,10 +6,10 @@ spring:
     name: qwen-chat-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/qwen_chat?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: ${MYSQL_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/qwen_chat
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
 
   # MongoDB 配置（可选，不使用可注释）
   data:
@@ -25,7 +25,7 @@ spring:
 # 条件化配置
 qwen:
   chat:
-    # 是否使用 MongoDB 存储聊天记录（false 则使用 MySQL）
+    # 是否使用 MongoDB 存储聊天记录（false 则使用 PostgreSQL）
     use-mongodb: ${USE_MONGODB:false}
 
 ai:
