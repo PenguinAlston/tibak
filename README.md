@@ -10,9 +10,9 @@
 - Spring WebFlux (SSE 流式响应)
 - Spring Security + JWT
 - MyBatis-Plus
-- MongoDB (聊天记录存储)
-- Redis (缓存)
-- MySQL (用户数据)
+- MySQL (主数据库 - 用户/对话/消息)
+- MongoDB (可选，聊天记录存储)
+- Redis (可选，缓存)
 
 ### 前端
 - Vue 3 + TypeScript
@@ -32,7 +32,7 @@
 
 ### 方式一：仅启动基础设施（推荐用于开发）
 
-此方式只启动 MySQL、MongoDB 和 Redis，前后端手动运行以便于开发调试。
+此方式只启动 MySQL，前后端手动运行以便于开发调试。
 
 ```bash
 # 1. 复制环境变量文件
@@ -40,7 +40,7 @@ cp .env.example .env
 
 # 2. 修改 .env 文件，设置 DASHSCOPE_API_KEY
 
-# 3. 启动基础设施（MySQL + MongoDB + Redis）
+# 3. 启动基础设施（仅 MySQL）
 # Windows
 docker-compose -f docker-compose.infra.yml up -d
 # 或使用快捷脚本
@@ -65,6 +65,8 @@ npm run dev
 # 6. 访问 http://localhost:3000
 ```
 
+**说明：** 默认配置仅使用 MySQL 存储所有数据（用户/对话/消息），无需 MongoDB 和 Redis。
+
 ### 方式二：完整 Docker 部署（生产环境）
 
 ```bash
@@ -81,7 +83,7 @@ docker-compose up -d
 
 ### 方式三：完全本地开发（无 Docker）
 
-需要手动安装 MySQL 8.0+、MongoDB 7+、Redis 7+
+需要手动安装 MySQL 8.0+
 
 #### 后端启动
 
@@ -132,8 +134,7 @@ npm run dev
 │   │   └── types/           # TypeScript 类型
 │   └── package.json
 ├── docker-compose.yml           # 完整部署配置
-├── docker-compose.infra.yml     # 仅基础设施配置
-├── docker-compose.mysql.yml     # 仅 MySQL 配置
+├── docker-compose.infra.yml     # 仅 MySQL 配置
 ├── start-infra.sh               # Linux/Mac 启动脚本
 ├── start-infra.bat              # Windows 启动脚本
 └── README.md
@@ -185,18 +186,30 @@ spring:
     url: jdbc:mysql://localhost:3306/qwen_chat
     username: root
     password: your-password
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/qwen_chat
-    redis:
-      host: localhost
-      port: 6379
+
+# 可选：使用 MongoDB 存储聊天记录（默认使用 MySQL）
+# qwen:
+#   chat:
+#     use-mongodb: true
 ```
 
 ### 前端配置 (.env)
 
 ```
 VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+### 环境变量 (.env)
+
+```bash
+# MySQL 配置
+MYSQL_PASSWORD=root
+
+# Dashscope API Key
+DASHSCOPE_API_KEY=your-api-key-here
+
+# JWT 密钥
+JWT_SECRET=your-secret-key
 ```
 
 ## 获取 Dashscope API Key
