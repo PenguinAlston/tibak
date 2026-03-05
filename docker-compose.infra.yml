@@ -7,7 +7,7 @@ version: '3.8'
 services:
   # PostgreSQL 数据库
   postgres:
-    image: postgres:15-alpine
+    image: docker.1ms.run/bitnami/postgresql:latest
     container_name: qwen-chat-postgres
     environment:
       POSTGRES_DB: qwen_chat

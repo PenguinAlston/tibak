@@ -1,39 +1,15 @@
 package com.qwen.chat.chat.config;
 
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.dashscope.DashscopeChatModel;
-import org.springframework.ai.dashscope.api.DashscopeApi;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+// TODO: 配置 Spring AI DashScope
+// 需要添加依赖: spring-ai-dashscope-spring-boot-starter
+// 并从 https://dashscope.console.aliyun.com/apiKey 获取 API Key
 
 @Configuration
 public class AiConfig {
 
-    @Value("${ai.dashscope.api-key:}")
-    private String apiKey;
+    // TODO: 配置 ChatClient 和 DashscopeChatModel
+    // 请参考 Spring AI Alibaba 文档进行配置
 
-    @Value("${ai.dashscope.model:qwen-plus}")
-    private String model;
-
-    @Bean
-    public ChatClient chatClient(DashscopeChatModel dashscopeChatModel) {
-        return ChatClient.builder(dashscopeChatModel).build();
-    }
-
-    @Bean
-    public DashscopeChatModel dashscopeChatModel() {
-        DashscopeApi dashscopeApi = DashscopeApi.builder()
-                .apiKey(apiKey)
-                .build();
-
-        return DashscopeChatModel.builder()
-                .dashscopeApi(dashscopeApi)
-                .defaultOptions(
-                    org.springframework.ai.dashscope.api.DashscopeApi.ChatOptions.builder()
-                        .withModel(model)
-                        .build()
-                )
-                .build();
-    }
 }
