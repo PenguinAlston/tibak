@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: qwen-chat-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: qwen_chat
+      MYSQL_USER: ${MYSQL_USER:-qwen}
+      MYSQL_PASSWORD: ${MYSQL_USER_PASSWORD:-qwen123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - qwen-chat-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: qwen-chat-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: qwen_chat
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - qwen-chat-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: qwen-chat-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - qwen-chat-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qwen-chat-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/qwen_chat?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-root}
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/qwen_chat
+      SPRING_REDIS_HOST: redis
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-your-api-key}
+      JWT_SECRET: ${JWT_SECRET:-qwen-chat-secret-key-for-jwt-token-generation}
+    ports:
+      - "8080:8080"
+    networks:
+      - qwen-chat-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: qwen-chat-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - qwen-chat-network
+
+networks:
+  qwen-chat-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  mongodb_data:
+  redis_data:

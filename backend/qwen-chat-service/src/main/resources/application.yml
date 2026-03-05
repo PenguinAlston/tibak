@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: qwen-chat-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/qwen_chat?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/qwen_chat
+
+  redis:
+    host: localhost
+    port: 6379
+    password: ${REDIS_PASSWORD:}
+
+ai:
+  dashscope:
+    enabled: true
+    api-key: ${DASHSCOPE_API_KEY:your-api-key-here}
+    model: qwen-plus
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_uuid
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: ${JWT_SECRET:qwen-chat-secret-key-for-jwt-token-generation-very-long-string}
+  expiration: 86400000
+
+logging:
+  level:
+    com.qwen.chat: debug
+    org.springframework.ai: debug
+
+# CORS 配置
+spring.mvc.cors:
+  allowed-origins: "*"
+  allowed-methods: "*"
+  allowed-headers: "*"
