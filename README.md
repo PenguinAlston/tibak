@@ -6,10 +6,10 @@
 
 ### 后端
 - Spring Boot 3.x
-- Spring AI Alibaba (通义千问集成)
 - Spring WebFlux (SSE 流式响应)
 - Spring Security + JWT
 - MyBatis-Plus
+- OkHttp (HTTP 客户端)
 - PostgreSQL (主数据库 - 用户/对话/消息)
 - MongoDB (可选，聊天记录存储)
 - Redis (可选，缓存)
@@ -175,10 +175,13 @@ npm run dev
 
 ```yaml
 # Dashscope API Key (必填)
+# 未配置时会返回占位回复
 ai:
   dashscope:
-    api-key: your-api-key
+    enabled: true
+    api-key: ${DASHSCOPE_API_KEY:your-api-key-here}
     model: qwen-plus
+    api-url: https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
 
 # 数据库配置 (PostgreSQL)
 spring:
@@ -186,12 +189,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/qwen_chat
     username: postgres
     password: postgres
-
-# 可选：使用 MongoDB 存储聊天记录（默认使用 PostgreSQL）
-# qwen:
-#   chat:
-#     use-mongodb: true
 ```
+
+**注意：** 由于 Spring AI 依赖无法从公共 Maven 仓库获取，项目使用 OkHttp 直接调用 DashScope API。如需使用真实的 AI 功能，请设置环境变量 `DASHSCOPE_API_KEY`。
 
 ### 前端配置 (.env)
 

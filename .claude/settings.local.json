@@ -4,7 +4,9 @@
       "WebFetch(domain:chat.qwen.ai)",
       "Bash(cd:*)",
       "Bash(cd /d/study/tibak/backend && mvn clean compile -DskipTests 2>&1)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "WebSearch",
+      "WebFetch(domain:central.sonatype.com)"
     ]
   }
 }
