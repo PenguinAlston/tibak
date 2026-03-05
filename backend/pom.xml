@@ -49,11 +49,12 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Spring AI Alibaba -->
+            <!-- Spring AI Alibaba DashScope -->
+            <!-- 注意：需要从 https://dashscope.console.aliyun.com/apiKey 获取 API Key -->
             <dependency>
                 <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-alibaba-starter</artifactId>
-                <version>${spring-ai.version}</version>
+                <artifactId>spring-ai-dashscope-spring-boot-starter</artifactId>
+                <version>1.0.0-M1</version>
             </dependency>
 
             <!-- MyBatis-Plus -->

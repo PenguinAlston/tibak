@@ -41,20 +41,21 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
-        <!-- Spring AI DashScope (需要从 https://mvnrepository.com/artifact/org.springframework.ai 获取) -->
-        <!-- 暂时注释，需要手动添加依赖或使用本地仓库 -->
+        <!-- Spring AI DashScope - 暂时注释，因为依赖无法从公共仓库获取 -->
+        <!-- 如需使用真实的 AI 功能，请手动下载依赖或配置本地仓库 -->
         <!--
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter</artifactId>
-            <version>1.0.0-M6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-dashscope-spring-boot-starter</artifactId>
-            <version>1.0.0-M6</version>
         </dependency>
         -->
+
+        <!-- OkHttp for HTTP Client -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
 
         <!-- Spring Security -->
         <dependency>

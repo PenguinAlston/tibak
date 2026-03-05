@@ -1,19 +1,28 @@
 package com.qwen.chat.chat.service;
 
+import com.qwen.chat.chat.config.AiConfig;
 import com.qwen.chat.chat.dto.ChatRequest;
 import com.qwen.chat.chat.entity.ConversationMybatis;
 import com.qwen.chat.chat.entity.MessageMybatis;
 import com.qwen.chat.chat.repository.ConversationMapper;
 import com.qwen.chat.chat.repository.MessageMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -23,6 +32,9 @@ public class ChatServiceMySQL implements ChatService {
 
     private final ConversationMapper conversationMapper;
     private final MessageMapper messageMapper;
+    private final AiConfig aiConfig;
+    private final OkHttpClient httpClient = new OkHttpClient();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public ConversationMybatis createConversation(String userId, String title) {
@@ -78,27 +90,92 @@ public class ChatServiceMySQL implements ChatService {
 
     @Override
     public Flux<String> streamChat(String userId, ChatRequest request) {
-        // TODO: 实现真实的 AI 调用
-        // 需要配置 Spring AI DashScope 依赖后才能使用
         return Flux.create(sink -> {
-            try {
-                // 占位实现：返回固定回复
-                String mockResponse = "您好！这是一个占位回复。要使用真实的 AI 对话功能，需要配置 Spring AI DashScope 依赖。\n\n" +
-                    "请在 pom.xml 中添加：\n" +
-                    "1. spring-ai-dashscope-spring-boot-starter\n" +
-                    "2. 在 application.yml 中配置 dashscope.api-key\n\n" +
+            // 如果 AI 未启用，返回占位回复
+            if (!aiConfig.isEnabled() || "your-api-key-here".equals(aiConfig.getApiKey())) {
+                String mockResponse = "您好！AI 功能尚未配置。要使用真实的 AI 对话功能，请设置环境变量 DASHSCOPE_API_KEY。\n\n" +
                     "您发送的消息是：" + request.getUserMessage();
-
                 sink.next(mockResponse);
                 sink.complete();
-
-                // 保存对话到数据库
                 saveConversation(userId, request, mockResponse);
+                return;
+            }
+
+            try {
+                // 构建请求体
+                String requestBody = buildRequestBody(request.getUserMessage());
+
+                // 创建 HTTP 请求
+                Request httpRequest = new Request.Builder()
+                    .url(aiConfig.getApiUrl())
+                    .addHeader("Authorization", "Bearer " + aiConfig.getApiKey())
+                    .addHeader("Content-Type", "application/json")
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+                // 异步执行请求
+                httpClient.newCall(httpRequest).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        log.error("HTTP request failed: {}", e.getMessage(), e);
+                        sink.error(e);
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        try {
+                            if (!response.isSuccessful()) {
+                                String errorBody = response.body() != null ? response.body().string() : "Unknown error";
+                                log.error("API response failed: {}", errorBody);
+                                sink.error(new RuntimeException("API 请求失败：" + errorBody));
+                                return;
+                            }
+
+                            String responseBody = response.body().string();
+                            JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+                            // 解析响应
+                            JsonNode outputNode = jsonNode.get("output");
+                            if (outputNode != null && outputNode.has("text")) {
+                                String content = outputNode.get("text").asText();
+                                sink.next(content);
+                                sink.complete();
+
+                                // 保存对话到数据库
+                                saveConversation(userId, request, content);
+                            } else {
+                                sink.error(new RuntimeException("无法解析 AI 响应"));
+                            }
+                        } catch (Exception e) {
+                            log.error("Failed to parse response: {}", e.getMessage(), e);
+                            sink.error(e);
+                        }
+                    }
+                });
+
             } catch (Exception e) {
                 log.error("Chat error: {}", e.getMessage(), e);
                 sink.error(e);
             }
         });
+    }
+
+    private String buildRequestBody(String userMessage) throws IOException {
+        ObjectNode inputNode = objectMapper.createObjectNode();
+        ArrayNode messagesNode = inputNode.putArray("messages");
+        ObjectNode messageNode = messagesNode.addObject();
+        messageNode.put("role", "user");
+        messageNode.put("content", userMessage);
+
+        ObjectNode parametersNode = objectMapper.createObjectNode();
+        parametersNode.put("model", aiConfig.getModel());
+
+        ObjectNode rootNode = objectMapper.createObjectNode();
+        rootNode.set("input", inputNode);
+        rootNode.set("parameters", parametersNode);
+        rootNode.put("model", aiConfig.getModel());
+
+        return objectMapper.writeValueAsString(rootNode);
     }
 
     @Override

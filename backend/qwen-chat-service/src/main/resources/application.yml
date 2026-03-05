@@ -32,7 +32,9 @@ ai:
   dashscope:
     enabled: true
     api-key: ${DASHSCOPE_API_KEY:your-api-key-here}
-    model: qwen-plus
+    chat:
+      options:
+        model: qwen-plus
 
 mybatis-plus:
   configuration:

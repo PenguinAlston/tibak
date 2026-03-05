@@ -1,15 +1,16 @@
 package com.qwen.chat.chat.config;
 
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-// TODO: 配置 Spring AI DashScope
-// 需要添加依赖: spring-ai-dashscope-spring-boot-starter
-// 并从 https://dashscope.console.aliyun.com/apiKey 获取 API Key
-
+@Data
 @Configuration
+@ConfigurationProperties(prefix = "ai.dashscope")
 public class AiConfig {
 
-    // TODO: 配置 ChatClient 和 DashscopeChatModel
-    // 请参考 Spring AI Alibaba 文档进行配置
-
+    private boolean enabled = true;
+    private String apiKey;
+    private String model = "qwen-plus";
+    private String apiUrl = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
 }
